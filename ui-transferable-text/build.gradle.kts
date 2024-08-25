@@ -33,8 +33,8 @@ dependencies {
 }
 
 configure<PublishingExtension> {
-    publications.create<MavenPublication>("myPlugin") {
-        groupId = "hr.dorianpavetic"
+    publications.create<MavenPublication>("ui-transferable-text") {
+        groupId = "com.github.dorianpavetic"
         artifactId = "ui-transferable-text"
         version = "v1.0.0"
 
