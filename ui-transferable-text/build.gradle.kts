@@ -1,4 +1,5 @@
 plugins {
+    id("maven-publish")
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
@@ -9,20 +10,8 @@ android {
 
     defaultConfig {
         minSdk = 24
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -30,14 +19,48 @@ android {
     kotlin {
         jvmToolchain(17)
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+}
+
+configure<PublishingExtension> {
+    publications.create<MavenPublication>("ui-transferable-text") {
+        groupId = "com.github.dorianpavetic"
+        artifactId = "ui-transferable-text"
+        version = "v1.0.0-alpha.4"
+        pom {
+            name.set("ui-transferable-text")
+            description.set(
+                "Library which enables passing localized text between Android context-aware and contextless components - e.g. between ViewModel and Fragment",
+            )
+            url.set("https://github.com/dorianpavetic/ui-transferable-text")
+            developers {
+                developer {
+                    id.set("dorianpavetic")
+                    name.set("Dorian-Filip Pavetic")
+                    email.set("dorian.pavetic1508@gmail.com")
+                }
+            }
+            scm {
+                connection.set("https://github.com/dorianpavetic/ui-transferable-text.git")
+                developerConnection.set("https://github.com/dorianpavetic/ui-transferable-text.git")
+                url.set("https://github.com/dorianpavetic/ui-transferable-text")
+            }
+        }
+        afterEvaluate {
+            from(components["release"])
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
