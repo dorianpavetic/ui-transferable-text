@@ -37,7 +37,28 @@ configure<PublishingExtension> {
         groupId = "com.github.dorianpavetic"
         artifactId = "ui-transferable-text"
         version = "v1.0.0"
-
+        pom {
+            name.set("ui-transferable-text")
+            description.set(
+                "Library which enables passing localized text between Android context-aware and contextless components - e.g. between ViewModel and Fragment",
+            )
+            url.set("https://github.com/dorianpavetic/ui-transferable-text")
+            developers {
+                developer {
+                    id.set("dorianpavetic")
+                    name.set("Dorian-Filip Pavetic")
+                    email.set("dorian.pavetic1508@gmail.com")
+                }
+            }
+            scm {
+                connection.set("https://github.com/dorianpavetic/ui-transferable-text.git")
+                developerConnection.set("https://github.com/dorianpavetic/ui-transferable-text.git")
+                url.set("https://github.com/dorianpavetic/ui-transferable-text")
+            }
+        }
+        afterEvaluate {
+            from(components["release"])
+        }
     }
     repositories {
         mavenLocal()
