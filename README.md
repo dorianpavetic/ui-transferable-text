@@ -4,7 +4,15 @@
 Library which enables passing localized text between Android context-aware and contextless components - e.g. between ViewModel and Fragment
 Functionalities can be easily extended using Kotlin extensions and custom implementations of `UiTransferableText` interface.
 
-**Important note**
+## Getting started
+To start using library, add dependency to your Android gradle file (not root one):
+```
+dependencies {
+  implementation 'com.github.dorianpavetic:ui-transferable-text:v1.0.0'
+}
+```
+
+### Important note
 When possible, try to use concrete types instead of generic `UiTransferableText` interface as data fields, as
 then inlined `value class` can be used instead of underlying objects like `UiTransferableText.Combined`.
 For example, lets consider this code:
@@ -42,13 +50,7 @@ interface and `value class` is not utilized. On the other hand, `description` is
 - Of course, this can not be possible in most of the cases, as this library indeed serves to encapsulate
 this kind of a logic, so it is completely legit to use generic `UiTransferableText` interface type
 
-## Getting started
-To start using library, add dependency to your Android gradle file (not root one):
-```
-dependencies {
-  implementation 'com.github.dorianpavetic:ui-transferable-text:v1.0.0'
-}
-```
+
 ## Implementation
 
 ### Resolving `UiTransferableText`
