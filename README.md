@@ -2,6 +2,7 @@
 
 # ui-transferable-text
 Library which enables passing localized text between Android context-aware and contextless components - e.g. between ViewModel and Fragment
+Functionalities can be easily extended using Kotlin extensions and custom implementations of `UiTransferableText` interface.
 
 ## Getting started
 To start using library, add dependency to your Android gradle file (not root one):
@@ -10,6 +11,46 @@ dependencies {
   implementation 'com.github.dorianpavetic:ui-transferable-text:v1.0.0'
 }
 ```
+
+### Important note
+When possible, try to use concrete types instead of generic `UiTransferableText` interface as data fields, as
+then inlined `value class` can be used instead of underlying objects like `UiTransferableText.Combined`.
+For example, lets consider this code:
+```kotlin
+data class MySimpleLabelDto(
+    // Compiles to UiTransferableText
+    val title: UiTransferableText,
+    // Compiles to List
+    val description: UiTransferableText.CombinedText
+)
+
+fun createLabel() : MySimpleLabelDto {
+    return MySimpleLabelDto(buildTitle(), buildDescription())
+}
+
+fun buildTitle() : UiTransferableText {
+    return UiTransferableText.combined(
+        " - ",
+        UiTransferableText.stringResId(android.R.string.paste_as_plain_text),
+        UiTransferableText.text("here")
+    )
+}
+
+fun buildDescription() : UiTransferableText.CombinedText {
+    return UiTransferableText.combined(
+        "...",
+        UiTransferableText.stringResId(android.R.string.ok),
+        UiTransferableText.text("Lets start")
+    )
+}
+```
+Here, because `MySimpleLabelDto.title` is unknown type of the `UiTransferableText` it is compiled to
+interface and `value class` is not utilized. On the other hand, `description` is declared with known type
+`UiTransferableText.CombinedText` which can then compile properly to it's underlying value type - `List`
+- Of course, this can not be possible in most of the cases, as this library indeed serves to encapsulate
+this kind of a logic, so it is completely legit to use generic `UiTransferableText` interface type
+
+
 ## Implementation
 
 ### Resolving `UiTransferableText`
@@ -54,15 +95,6 @@ val textWithArgsAndCaseTransform = UiTransferableText.pluralsResId(
  3,
  3
 )
-```
-
-### Translatable
-```kotlin
-val translatableMap = TranslatableMap.emptyMap()
-translatableMap[LanguageCode.EN] = "Cat"
-translatableMap[LanguageCode.HR] = "Mačka"
-// For English resolves to "Cat" but for Croatian resolves to "Mačka"
-val text = UiTransferableText.translatable(translatableMap)
 ```
 
 ### Text
