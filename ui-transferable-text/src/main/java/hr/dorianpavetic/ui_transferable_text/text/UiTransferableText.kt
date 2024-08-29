@@ -3,8 +3,7 @@ package hr.dorianpavetic.ui_transferable_text.text
 import android.content.Context
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
-import hr.dorianpavetic.ui_transferable_text.translation.TranslatableMap
-import hr.dorianpavetic.ui_transferable_text.translation.TranslatableMap.Companion.translated
+import hr.dorianpavetic.ui_transferable_text.R
 import java.io.Serializable
 
 interface UiTransferableText : Serializable {
@@ -17,10 +16,35 @@ interface UiTransferableText : Serializable {
      */
     fun getText(context: Context): CharSequence
 
+    data class MySimpleLabelDto(
+        val title: UiTransferableText,
+        val description: UiTransferableText.CombinedText
+    )
+
+    fun createLabel() : MySimpleLabelDto {
+        return MySimpleLabelDto(buildTitle(), buildDescription())
+    }
+
+    fun buildTitle() : UiTransferableText {
+        return UiTransferableText.combined(
+            " - ",
+            UiTransferableText.stringResId(android.R.string.paste_as_plain_text),
+            UiTransferableText.text("here")
+        )
+    }
+
+    fun buildDescription() : UiTransferableText.CombinedText {
+        return UiTransferableText.combined(
+            "...",
+            UiTransferableText.stringResId(android.R.string.ok),
+            UiTransferableText.text("Lets start")
+        )
+    }
+
     companion object {
-        fun combined(vararg texts: UiTransferableText) = combined(texts.toList())
+        fun combined(vararg texts: UiTransferableText) = combined(texts.toMutableList())
         fun combined(separator: CharSequence, vararg texts: UiTransferableText) =
-            combined(texts.toList(), separator)
+            combined(texts.toMutableList(), separator)
         fun combined(texts: List<UiTransferableText>, separator: CharSequence = ", ") =
             CombinedText(separator, texts)
 
@@ -36,53 +60,68 @@ interface UiTransferableText : Serializable {
 
         fun stringResIdList(@StringRes values: Collection<Int>) = StringResIdList(values)
 
-        fun translatable(value: TranslatableMap) = Translatable(value)
-
         fun text(value: CharSequence) = Text(value)
     }
 
 
-/**
- * Generic container for combining multiple [UiTransferableText]
- * by given [separator].
- *
- * @property separator Separator used to join [texts].
- * @property texts List of [UiTransferableText] to join in a single text.
- */
-data class CombinedText(
-    val separator: CharSequence,
-    val texts: List<UiTransferableText>
-) : UiTransferableText {
-    override fun getText(context: Context): String =
-        texts.joinToString(separator) { it.getText(context) }
-}
+    /**
+     * Generic container for combining multiple [UiTransferableText]s.
+     * First element in the list is separator used to join values
+     * @property value List of [UiTransferableText] to join in a single text.
+     */
+    @JvmInline
+    value class CombinedText(private val value: List<UiTransferableText>) : UiTransferableText {
 
-/**
- * Container for [StringRes] with optional arguments and case transformation.
- *
- * @property stringResId ID of the String resource.
- * @property caseTransformType Optional case transformation type of
- * the translated text.
- * @property args Arguments to supply to given [stringResId].
- */
-data class StringResId(
-    @JvmField
-    @StringRes
-    val stringResId: Int,
-    val caseTransformType: CaseTransformType?,
-    override val args: List<Any>
-) : UiTransferableText, Argumentable {
-    override fun getText(context: Context) : String {
-        // Resolves arguments texts if argument is UiTransferableText
-        val resolvedArgs = resolveArgs(context)
+        private val separator: CharSequence
+            get() = (value.first() as Text).text
 
-        val text = if (args.isEmpty())
-            context.getString(this.stringResId)
-        else
-            context.getString(this.stringResId, *resolvedArgs.toTypedArray())
-        return caseTransformType?.transform(text) ?: text
+        constructor(
+            separator: CharSequence = ", ",
+            texts: List<UiTransferableText>
+        ) : this(prependSeparator(separator, texts))
+
+        companion object {
+            private fun prependSeparator(
+                separator: CharSequence = ", ",
+                texts: List<UiTransferableText>
+            ) : List<UiTransferableText> {
+                val mutableList = if (texts is MutableList) texts else texts.toMutableList()
+                mutableList.add(0, text(separator))
+                return mutableList
+            }
+        }
+
+        override fun getText(context: Context): String =
+            value.drop(1).joinToString(separator) { it.getText(context) }
+
     }
-}
+
+    /**
+     * Container for [StringRes] with optional arguments and case transformation.
+     *
+     * @property stringResId ID of the String resource.
+     * @property caseTransformType Optional case transformation type of
+     * the translated text.
+     * @property args Arguments to supply to given [stringResId].
+     */
+    data class StringResId(
+        @JvmField
+        @StringRes
+        val stringResId: Int,
+        val caseTransformType: CaseTransformType?,
+        override val args: List<Any>
+    ) : UiTransferableText, Argumentable {
+        override fun getText(context: Context) : String {
+            // Resolves arguments texts if argument is UiTransferableText
+            val resolvedArgs = resolveArgs(context)
+
+            val text = if (args.isEmpty())
+                context.getString(this.stringResId)
+            else
+                context.getString(this.stringResId, *resolvedArgs.toTypedArray())
+            return caseTransformType?.transform(text) ?: text
+        }
+    }
 
     /**
      * Container for [PluralsRes] with optional arguments and case transformation.
@@ -129,21 +168,6 @@ data class StringResId(
     ) : UiTransferableText {
         override fun getText(context: Context) =
             stringResIdList.joinToString { context.getString(it) }
-    }
-
-    /**
-     * Container for [TranslatableMap].
-     *
-     * - Used for user-input texts in multiple languages.
-     *
-     * @property translatable [TranslatableMap] to resolve.
-     */
-    @JvmInline
-    value class Translatable(
-        @JvmField
-        val translatable: TranslatableMap
-    ) : UiTransferableText {
-        override fun getText(context: Context) = translatable.translated()
     }
 
     /**
