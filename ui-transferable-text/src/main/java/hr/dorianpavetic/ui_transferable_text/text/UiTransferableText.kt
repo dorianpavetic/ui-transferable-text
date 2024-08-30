@@ -3,7 +3,6 @@ package hr.dorianpavetic.ui_transferable_text.text
 import android.content.Context
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
-import hr.dorianpavetic.ui_transferable_text.R
 import java.io.Serializable
 
 interface UiTransferableText : Serializable {
@@ -15,31 +14,6 @@ interface UiTransferableText : Serializable {
      * @return translated and localized text.
      */
     fun getText(context: Context): CharSequence
-
-    data class MySimpleLabelDto(
-        val title: UiTransferableText,
-        val description: UiTransferableText.CombinedText
-    )
-
-    fun createLabel() : MySimpleLabelDto {
-        return MySimpleLabelDto(buildTitle(), buildDescription())
-    }
-
-    fun buildTitle() : UiTransferableText {
-        return UiTransferableText.combined(
-            " - ",
-            UiTransferableText.stringResId(android.R.string.paste_as_plain_text),
-            UiTransferableText.text("here")
-        )
-    }
-
-    fun buildDescription() : UiTransferableText.CombinedText {
-        return UiTransferableText.combined(
-            "...",
-            UiTransferableText.stringResId(android.R.string.ok),
-            UiTransferableText.text("Lets start")
-        )
-    }
 
     companion object {
         fun combined(vararg texts: UiTransferableText) = combined(texts.toMutableList())
