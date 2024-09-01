@@ -36,7 +36,7 @@ configure<PublishingExtension> {
     publications.create<MavenPublication>("ui-transferable-text") {
         groupId = "com.github.dorianpavetic"
         artifactId = "ui-transferable-text"
-        version = "1.0.3"
+        version = "1.0.4"
         pom {
             name.set("ui-transferable-text")
             description.set(
