@@ -58,10 +58,8 @@ interface UiTransferableText : Serializable {
             private fun prependSeparator(
                 separator: CharSequence = ", ",
                 texts: List<UiTransferableText>
-            ) : List<UiTransferableText> {
-                val mutableList = if (texts is MutableList) texts else texts.toMutableList()
-                mutableList.add(0, text(separator))
-                return mutableList
+            ) = texts.toMutableList().also {
+                it.add(0, text(separator))
             }
         }
 
