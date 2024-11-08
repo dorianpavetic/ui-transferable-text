@@ -3,6 +3,8 @@ package hr.dorianpavetic.ui_transferable_text.text
 import android.content.Context
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
+import hr.dorianpavetic.ui_transferable_text.text.SeparatableUiTransferableText.Companion.DEFAULT_SEPARATOR
+import hr.dorianpavetic.ui_transferable_text.text.SeparatableUiTransferableText.Companion.prependSeparator
 import java.io.Serializable
 
 interface UiTransferableText : Serializable {
@@ -15,11 +17,12 @@ interface UiTransferableText : Serializable {
      */
     fun getText(context: Context): CharSequence
 
+    @Suppress("unused", "MemberVisibilityCanBePrivate")
     companion object {
         fun combined(vararg texts: UiTransferableText) = combined(texts.toMutableList())
         fun combined(separator: CharSequence, vararg texts: UiTransferableText) =
             combined(texts.toMutableList(), separator)
-        fun combined(texts: List<UiTransferableText>, separator: CharSequence = ", ") =
+        fun combined(texts: List<UiTransferableText>, separator: CharSequence = DEFAULT_SEPARATOR) =
             CombinedText(separator, texts)
 
         fun pluralsResId(@PluralsRes value: Int, quantity: Int, vararg args: Any) =
@@ -32,7 +35,9 @@ interface UiTransferableText : Serializable {
         fun stringResId(@StringRes value: Int, caseTransformType: CaseTransformType?, vararg args: Any) =
             StringResId(value, caseTransformType, args.toList())
 
-        fun stringResIdList(@StringRes values: Collection<Int>) = StringResIdList(values)
+        fun stringResIdList(@StringRes stringResId: List<Int>) = StringResIdList(-1, stringResId)
+        fun stringResIdList(@StringRes separator: Int, @StringRes stringResId: List<Int>) =
+            StringResIdList(separator, stringResId.toMutableList())
 
         fun text(value: CharSequence) = Text(value)
 
@@ -46,27 +51,18 @@ interface UiTransferableText : Serializable {
      * @property value List of [UiTransferableText] to join in a single text.
      */
     @JvmInline
-    value class CombinedText(private val value: List<UiTransferableText>) : UiTransferableText {
+    value class CombinedText private constructor(
+        override val value: List<UiTransferableText>
+    ) : SeparatableUiTransferableText<UiTransferableText> {
 
-        private val separator: CharSequence
-            get() = (value.first() as Text).text
-
-        constructor(
-            separator: CharSequence = ", ",
+        internal constructor(
+            separator: CharSequence = DEFAULT_SEPARATOR,
             texts: List<UiTransferableText>
-        ) : this(prependSeparator(separator, texts))
+        ) : this(prependSeparator(text(separator), texts))
 
-        companion object {
-            private fun prependSeparator(
-                separator: CharSequence = ", ",
-                texts: List<UiTransferableText>
-            ) = texts.toMutableList().also {
-                it.add(0, text(separator))
-            }
-        }
-
-        override fun getText(context: Context): String =
-            value.drop(1).joinToString(separator) { it.getText(context) }
+        override fun resolveSingleItemText(
+            context: Context, item: UiTransferableText, isSeparator: Boolean
+        ) = item.getText(context)
 
     }
 
@@ -135,13 +131,27 @@ interface UiTransferableText : Serializable {
      * @property stringResIdList List of String resource IDs.
      */
     @JvmInline
-    value class StringResIdList(
-        @JvmField
+    value class StringResIdList private constructor(
         @StringRes
-        val stringResIdList: Collection<Int>,
-    ) : UiTransferableText {
-        override fun getText(context: Context) =
-            stringResIdList.joinToString { context.getString(it) }
+        override val value: List<Int>,
+    ) : SeparatableUiTransferableText<Int> {
+
+        internal constructor(
+            separator: Int,
+            texts: List<Int>
+        ) : this(prependSeparator(separator, texts))
+
+        override fun resolveSingleItemText(
+            context: Context,
+            item: Int,
+            isSeparator: Boolean
+        ): CharSequence {
+            // Uses default separator if no valid separator is provided
+            if (isSeparator && item == -1)
+                return DEFAULT_SEPARATOR
+            return context.getString(item)
+        }
+
     }
 
     /**
@@ -160,6 +170,12 @@ interface UiTransferableText : Serializable {
         override fun getText(context: Context) = text
     }
 
+    /**
+     * Container for data type that allows passing function that should
+     * be resolved at runtime when `getText(Context)` is called, for example,
+     * when `Context` is actually known and passed
+     *  - Use case: when resolving text that requires `Context`
+     */
     @JvmInline
     value class LazyResolvable(
         private val resolveFunction: (Context) -> CharSequence
