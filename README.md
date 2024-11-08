@@ -1,14 +1,14 @@
 [![](https://jitpack.io/v/dorianpavetic/ui-transferable-text.svg)](https://jitpack.io/#dorianpavetic/ui-transferable-text)
 
 # ui-transferable-text
-Library which enables passing localized text between Android context-aware and contextless components - e.g. between ViewModel and Fragment
+Library which enables passing localized text between Android context-aware and context-less components - e.g. between ViewModel and Fragment
 Functionalities can be easily extended using Kotlin extensions and custom implementations of `UiTransferableText` interface.
 
 ## Getting started
 To start using library, add dependency to your Android gradle file (not root one):
 ```
 dependencies {
-  implementation 'com.github.dorianpavetic:ui-transferable-text:v1.0.0'
+  implementation 'com.github.dorianpavetic:ui-transferable-text:v1.0.5'
 }
 ```
 
@@ -183,7 +183,24 @@ private fun getAllowedPetsTypesWithRestrictionText(
  }
 ```
 
+### LazyResolvable
+
+```kotlin
+import java.time.LocalDate
+import java.time.LocalTime
+
+// Resolves to different formatting based on context and locale, e.g. for English: "10 - 11 AM"
+val formattedTimeRangeLazyResolvable = UiTransferableText.lazyResolvable { context: Context ->
+    TimeRangeUtils.formatForLocalizedDisplay(
+        context, LocalTime.of(10, 0), LocalTime.of(11, 0),
+    )
+}
+// ...
+// Later in code when Context is available, e.g. Fragment
+binding.textView.text = formattedTimeRangeLazyResolvable.getText(context)
+```
+
 ## Medium
-This library is result of the Medium article, where you can see more detailed explainations of library code:
+This library is result of the Medium article, where you can see more detailed explanations of library code:
 https://medium.com/@dorianpavetic/android-localize-text-in-viewmodel-f1521aff3583
 
