@@ -35,6 +35,8 @@ interface UiTransferableText : Serializable {
         fun stringResIdList(@StringRes values: Collection<Int>) = StringResIdList(values)
 
         fun text(value: CharSequence) = Text(value)
+
+        fun lazyResolvable(resolveFunction: (Context) -> CharSequence) = LazyResolvable(resolveFunction)
     }
 
 
@@ -156,6 +158,13 @@ interface UiTransferableText : Serializable {
         val text: CharSequence
     ) : UiTransferableText {
         override fun getText(context: Context) = text
+    }
+
+    @JvmInline
+    value class LazyResolvable(
+        private val resolveFunction: (Context) -> CharSequence
+    ) : UiTransferableText {
+        override fun getText(context: Context) = resolveFunction.invoke(context)
     }
 
 }
