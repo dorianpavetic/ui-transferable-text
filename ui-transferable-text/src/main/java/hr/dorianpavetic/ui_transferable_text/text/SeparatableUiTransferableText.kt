@@ -24,7 +24,7 @@ interface SeparatableUiTransferableText<T>: UiTransferableText {
 
     override fun getText(context: Context): CharSequence {
         val separatorText = this.resolveSingleItemText(context, separator, true)
-        return value.joinToString(separatorText) { this.resolveSingleItemText(context, it, false) }
+        return textList.joinToString(separatorText) { this.resolveSingleItemText(context, it, false) }
     }
 
     companion object {
